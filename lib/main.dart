@@ -20,7 +20,7 @@ class ChatScreen extends StatefulWidget {
   State createState() => new ChatScreenState();
 }
 
-class ChatScreenState extends State<ChatScreen> {
+class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
 
   final List<ChatMessage> _messages = <ChatMessage>[];
   final TextEditingController _textEditingController =
@@ -94,22 +94,38 @@ class ChatScreenState extends State<ChatScreen> {
   void _handleSubmitted(String text) {
     _textEditingController.clear();
     ChatMessage message = new ChatMessage(                         //new
-      text: text,                                                  //new
+      text: text,
+      animationController: new AnimationController(
+          duration: new Duration(milliseconds: 700), vsync: this), //new
     );                                                             //new
     setState(() {                                                  //new
       _messages.insert(0, message);                                //new
     });
+    message.animationController.forward();
+  }
 
+
+//  Disposing animation when no longer needed
+  @override
+  void dispose() {                                                   //new
+    for (ChatMessage message in _messages)                           //new
+      message.animationController.dispose();                         //new
+    super.dispose();                                                 //new
   }
 }
 
 
 class ChatMessage extends StatelessWidget {
-  ChatMessage({this.text});
+  ChatMessage({this.text, this.animationController});
   final String text;
+  final AnimationController animationController;
   @override
   Widget build(BuildContext context) {
-    return new Container(
+    return new SizeTransition(
+        sizeFactor: new CurvedAnimation(
+            parent: animationController, curve: Curves.easeOut),
+        axisAlignment: 0.0,
+        child: new Container(
       margin: const EdgeInsets.symmetric(vertical: 10.0),
       child: new Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -130,6 +146,7 @@ class ChatMessage extends StatelessWidget {
           ),
         ],
       ),
+        )
     );
   }
 }
